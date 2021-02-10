@@ -1,23 +1,33 @@
-import {Link, BrowserRouter, Route, Switch } from 'react-router-dom';
+import {BrowserRouter, Route, Switch } from 'react-router-dom';
 import './App.css';
+import "bootstrap/dist/css/bootstrap.min.css";
 import Dashboard from './components/pages/auth/Dashboard/Dashboard';
-import NoMatch from './components/pages/NoMatch';
+import { ProvideAuth } from './hooks/use-auth';
+import Login from './components/pages/public/Login/Login';
+import NoMatch from './components/pages/public/NoMatch/NoMatch';
+import PrivateRoute from './components/utils/PrivateRoute/PrivateRoute';
+import { Container } from 'reactstrap';
 
 function App() {
   return (
-    <div className="wrapper">
+    <Container >
       <h1>Appliation</h1>
-      <BrowserRouter>
-        <Switch>
-          <Route path="/dashboard">
-            <Dashboard />
-          </Route>
-          <Route  path="*">
-            <NoMatch />
-          </Route>
-        </Switch>
-      </BrowserRouter>
-    </div>
+      <ProvideAuth>
+        <BrowserRouter>
+          <Switch>
+          <Route exact path="/">
+              <Login />
+            </Route>
+            <PrivateRoute path="/dashboard">
+              <Dashboard />
+            </PrivateRoute>
+            <Route path="*">
+              <NoMatch />
+            </Route>
+          </Switch>
+        </BrowserRouter>
+      </ProvideAuth>
+    </Container>
   );
 }
 
