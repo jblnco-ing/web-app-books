@@ -3,15 +3,17 @@ const user = {
     isAuthenticated: false,
     token: null,
     tokenKey: 'token',
-    signin: async (data, config={}) => {
-      const response = await API.put(`user/${data.email}`, data, config);
-      if (response.data) {
-        user.isAuthenticated = true;
-        user.token= response.data.sessionTokenBck
-      }
-      return response;
+    signin: (data, config={}) => {
+      return API.put(`user/${data.email}`, data, config)
+      .then(response =>{
+        if (response?.data) {
+          user.isAuthenticated = true;
+          user.token= response.data.sessionTokenBck
+        }
+        return response;
+      });
     },
-    signout: async (config={}) => {
+    signout: async () => {
       user.isAuthenticated = false;
       user.token= null
     }
