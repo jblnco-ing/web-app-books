@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Col, Container, Row } from 'reactstrap';
+import { Button, Col, Container, FormGroup, Row } from 'reactstrap';
 import bookingsFake from '../../../../consts/bookingsFake';
 import columns from '../../../../consts/columns';
 import { useAuth } from '../../../../hooks/use-auth';
@@ -8,18 +8,15 @@ import Alert from '../../../shared/Alert/Alert';
 import FilterTable from '../../../shared/FilterTable/FilterTable';
 import { Spinner } from 'reactstrap';
 
-const getBokingsByUser = (email, token, adminemail = '') => {
+const getBokingsByUser = (email, token, adminemail) => {
   const data = { email };
   const config = {
-    headers: adminemail ? {
+    headers: {
       token,
       adminemail,
       app: 'APP_BCK'
-    } : {
-        token,
-        app: 'APP_BCK'
-      }
-  }
+    }
+  };
   return bookingService.getBokingsByUser(data, config)
     .then(response => {
       if (response)
@@ -38,39 +35,28 @@ const getBokingsByUser = (email, token, adminemail = '') => {
 
 const Dashboard = () => {
   const auth = useAuth();
-  const { email, token } = auth?.user || {email:'',token:''};
+  const { email, token } = auth?.user || { email: '', token: '' };
   const [error, setError] = useState({});
   const [isError, setIsError] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isResolved, setIsResolved] = useState(false);
-  const [isUpdate, setIsUpdate] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [bookings, setBookings] = useState([]);
-  useEffect(() => {
-    const getData = async () => {
-      setIsLoading(true)
-      try {
-        setIsError(false);
-        const result = isResolved ? await getBokingsByUser(email, token, email) : await getBokingsByUser(email, token);
-        setIsLoading(false);
-        setBookings(result);
-      } catch (error) {
-        setIsLoading(false);
-        const { statusText, status } = error.response
-        setError({ statusText, status });
-        setIsError(true);
-      }
-    };
-    getData();
-  }, [email, token, isUpdate]);
-  const handleResolve = () => {
-    setIsResolved(true);
-    setIsUpdate(!isUpdate);
+  const [emailClient, setEmailClient] = useState('contacto@tuten.cl');
+
+  const getData = async () => {
+    setIsLoading(true);
+    try {
+      setIsError(false);
+      const result = await getBokingsByUser(emailClient, token, email);
+      setIsLoading(false);
+      setBookings(result);
+    } catch (error) {
+      setIsLoading(false);
+      const { statusText, status } = error.response
+      setError({ statusText, status });
+      setIsError(true);
+    }
   };
-  const handleFakeData = () => {
-    setBookings(bookingsFake);
-    setIsError(false);
-    setIsLoading(false);
-  };
+
   const handleSignout = () => {
     auth.signout()
       .catch(error => {
@@ -83,16 +69,33 @@ const Dashboard = () => {
 
   return (
     <Container >
-      <Row>
-        <Col sm={{ size: 'auto', offset: 1 }}><h2 >Dashboard</h2></Col>
-        <Col sm={{ size: 'auto', offset: 1 }}><Button onClick={handleSignout}>Signout</Button></Col>
+      <Row className="d-flex align-items-center justify-content-between">
+        <Col sm={{ size: 'auto', offset: 1 }}>
+          <h2 >Dashboard</h2>
+        </Col>
+        <Col sm={{ size: 'auto', offset: 1 }}>
+          <Button onClick={handleSignout} size="sm">Signout</Button>
+        </Col>
       </Row>
-      <Container style={{textAlign:"center"}}>
-      {loading}
-      {!isLoading && content}
+      <Row className="d-flex justify-content-between">
+        <Col sm={{ size: 'auto', offset: 1 }}>
+          <FormGroup row>
+            <label className="d-flex align-items-center">
+              <span style={{ marginRight: "5px" }}>Email</span>
+              <input aria-label="email" type="text" placeholder="contacto@tuten.cl"
+                value={emailClient}
+                onChange={e => setEmailClient(e.target.value)}
+              />
+              <Button onClick={getData} size="sm">Send</Button>
+            </label>
+          </FormGroup>
+        </Col>
+      </Row>
+      <Container style={{ textAlign: "center" }}>
+        {loading}
+        {!isLoading && content}
+        {!bookings.length && !isLoading && <span>Send a email.</span>}
       </Container>
-      <Button style={{margin:"10px"}} onClick={handleResolve}>Resolve adminemail</Button>
-      <Button style={{margin:"10px"}} onClick={handleFakeData}>Use Fake Data</Button>
     </Container>
   );
 };
